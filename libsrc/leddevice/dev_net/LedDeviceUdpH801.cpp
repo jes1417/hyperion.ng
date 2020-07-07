@@ -7,7 +7,9 @@ LedDeviceUdpH801::LedDeviceUdpH801(const QJsonObject &deviceConfig)
 	: ProviderUdp()
 {
 	_devConfig = deviceConfig;
-	_deviceReady = false;
+	_isDeviceReady = false;
+
+	_activeDeviceType = deviceConfig["type"].toString("UNSPECIFIED").toLower();
 }
 
 LedDevice* LedDeviceUdpH801::construct(const QJsonObject &deviceConfig)
@@ -17,13 +19,15 @@ LedDevice* LedDeviceUdpH801::construct(const QJsonObject &deviceConfig)
 
 bool LedDeviceUdpH801::init(const QJsonObject &deviceConfig)
 {
+	bool isInitOK = false;
+
 	/* The H801 port is fixed */
 	_latchTime_ms = 10;
 	_port = H801_DEFAULT_PORT;
 	_defaultHost = H801_DEFAULT_HOST;
 
-	bool isInitOK = ProviderUdp::init(deviceConfig);
-	if ( isInitOK )
+	// Initialise sub-class
+	if ( ProviderUdp::init(deviceConfig) )
 	{
 		_ids.clear();
 		QJsonArray lArray = deviceConfig["lightIds"].toArray();
@@ -44,6 +48,8 @@ bool LedDeviceUdpH801::init(const QJsonObject &deviceConfig)
 		}
 
 		Debug(_log, "H801 using %s:%d", _address.toString().toStdString().c_str(), _port);
+
+		isInitOK = true;
 	}
 	return isInitOK;
 }
